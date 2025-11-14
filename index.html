@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEVER HIDE CHAT CAMP 2</title>
+    
+    <style>
+        /* === Global & Reset === */
+        :root {
+            --primary-color: #007bff;
+            --secondary-color: #f8f9fa;
+            --dark-color: #343a40;
+            --light-color: #ffffff;
+            --border-color: #dee2e6;
+            --system-message-color: #6c757d;
+            --my-message-bg: #007bff;
+            --my-message-text: #ffffff;
+            --other-message-bg: #e9ecef;
+            --other-message-text: #212529;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--secondary-color);
+            color: var(--dark-color);
+            overflow: hidden; /* Prevents whole page scroll */
+        }
+
+        /* === Lobby Container === */
+        #lobby-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            padding: 1rem;
+        }
+
+        .lobby-box {
+            width: 100%;
+            max-width: 400px;
+            background: var(--light-color);
+            padding: 2.5rem 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            text-align: center;
+        }
+
+        .lobby-box h1 {
+            margin-bottom: 1.5rem;
+            font-size: 1.75rem;
+            color: var(--dark-color);
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.75rem;
+            font-size: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 0.75rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--light-color);
+            background-color: var(--primary-color);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .btn:hover {
+            background-color: #0056b3;
+        }
+
+        /* === Chat Container (Mobile-First) === */
+        #chat-container {
+            display: none; /* Hidden by default */
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* === Chat Header (Mobile) === */
+        .chat-header-mobile {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            background: var(--light-color);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .chat-header-mobile h2 {
+            font-size: 1.25rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: calc(100% - 60px);
+        }
+
+        #toggle-users-btn {
+            padding: 0.5rem 0.75rem;
+            font-size: 0.9rem;
+            background: var(--secondary-color);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        /* === Chat Main Area === */
+        .chat-main {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; /* Prevents overflow in flex container */
+        }
+
+        /* === Chat Sidebar (Users List) === */
+        .chat-sidebar {
+            background: var(--light-color);
+            padding: 1rem;
+            border-top: 1px solid var(--border-color);
+            order: -1; /* Move to top on mobile */
+            display: none; /* Hidden by default on mobile */
+        }
+
+        .chat-sidebar.visible {
+            display: block;
+        }
+
+        .chat-sidebar h2 {
+            font-size: 1.25rem;
+            margin-bottom: 0.5rem;
+            display: none; /* Hidden on mobile, shown on desktop */
+        }
+
+        .chat-sidebar h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        #user-list {
+            list-style-type: none;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        #user-list li {
+            padding: 0.25rem 0;
+            font-size: 0.95rem;
+        }
+
+        /* === Chat Messages Window === */
+        .chat-messages {
+            flex-grow: 1;
+            padding: 1rem;
+            overflow-y: auto; /* This is the key */
+            background: var(--secondary-color);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .message {
+            max-width: 80%;
+            margin-bottom: 0.75rem;
+            padding: 0.6rem 0.9rem;
+            border-radius: 12px;
+            word-wrap: break-word;
+        }
+        
+        .message-sender {
+            font-weight: 600;
+            font-size: 0.85rem;
+            margin-bottom: 0.25rem;
+            color: var(--dark-color);
+        }
+        
+        .message.my-message {
+            background: var(--my-message-bg);
+            color: var(--my-message-text);
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+        
+        .message.my-message .message-sender {
+            display: none; /* Don't show name for my own messages */
+        }
+        
+        .message.other-message {
+            background: var(--other-message-bg);
+            color: var(--other-message-text);
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+        }
+        
+        .message.system-message {
+            background: none;
+            color: var(--system-message-color);
+            font-style: italic;
+            font-size: 0.9rem;
+            align-self: center;
+            text-align: center;
+            padding: 0.25rem 0;
+        }
+
+        /* === Chat Input Form === */
+        .chat-form-container {
+            padding: 1rem;
+            background: var(--light-color);
+            border-top: 1px solid var(--border-color);
+        }
+
+        #chat-form {
+            display: flex;
+        }
+
+        #msg-input {
+            flex-grow: 1;
+            padding: 0.75rem;
+            font-size: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            margin-right: 0.5rem;
+        }
+
+        #chat-form button {
+            padding: 0.75rem 1rem;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--light-color);
+            background-color: var(--primary-color);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        /* === Desktop Responsiveness (Media Query) === */
+        @media (min-width: 768px) {
+            #chat-container {
+                flex-direction: row; /* Side-by-side layout */
+            }
+
+            .chat-header-mobile {
+                display: none; /* Hide mobile header */
+            }
+            
+            .chat-sidebar {
+                flex: 0 0 280px; /* Fixed width sidebar */
+                border-top: none;
+                border-right: 1px solid var(--border-color);
+                order: 0; /* Reset order */
+                display: block !important; /* Always visible */
+                height: 100vh;
+                display: flex;
+                flex-direction: column;
+            }
+
+            .chat-sidebar h2 {
+                display: block; /* Show desktop title */
+            }
+            
+            #user-list {
+                max-height: none;
+                flex-grow: 1; /* Allow list to fill space */
+            }
+
+            .chat-main {
+                flex-grow: 1;
+                height: 100vh;
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="lobby-container">
+        <div class="lobby-box">
+            <h1>Join Event Chat</h1>
+            <form id="join-form">
+                <div class="form-group">
+                    <label for="nickname">Nickname</label>
+                    <input type="text" id="nickname" required maxlength="15" autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label for="room">Event/Room Name</label>
+                    <input type="text" id="room" required maxlength="20" autocomplete="off">
+                </div>
+                <button type="submit" class="btn">Join Chat</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="chat-container">
+        <aside class="chat-sidebar" id="chat-sidebar">
+            <h2>[Your App Name Here]</h2>
+            <h3 id="room-name-display"></h3>
+            <ul id="user-list">
+                </ul>
+        </aside>
+
+        <main class="chat-main">
+            <header class="chat-header-mobile">
+                <h2 id="room-name-display-mobile"></h2>
+                <button id="toggle-users-btn">Users</button>
+            </header>
+
+            <div class="chat-messages" id="chat-messages">
+                </div>
+
+            <div class="chat-form-container">
+                <form id="chat-form">
+                    <input id="msg-input" type="text" placeholder="Type a message..." required autocomplete="off" />
+                    <button type="submit">Send</button>
+                </form>
+            </div>
+        </main>
+    </div>
+
+
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const socket = io();
+
+            // === Element References ===
+            // Lobby
+            const lobbyContainer = document.getElementById('lobby-container');
+            const joinForm = document.getElementById('join-form');
+            const nicknameInput = document.getElementById('nickname');
+            const roomInput = document.getElementById('room');
+            
+            // Chat
+            const chatContainer = document.getElementById('chat-container');
+            const chatSidebar = document.getElementById('chat-sidebar');
+            const roomNameDisplay = document.getElementById('room-name-display');
+            const roomNameDisplayMobile = document.getElementById('room-name-display-mobile');
+            const userList = document.getElementById('user-list');
+            const toggleUsersBtn = document.getElementById('toggle-users-btn');
+            
+            const chatMessages = document.getElementById('chat-messages');
+            const chatForm = document.getElementById('chat-form');
+            const msgInput = document.getElementById('msg-input');
+
+            let currentNickname = ''; // Store the user's nickname
+
+            // === Event Listeners ===
+
+            // 1. Handle "Join Chat" (Lobby Form Submission)
+            joinForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                
+                const nickname = nicknameInput.value.trim();
+                const room = roomInput.value.trim();
+
+                if (nickname && room) {
+                    currentNickname = nickname; // Store for later
+                    
+                    // Emit 'join room' event to server
+                    socket.emit('join room', { nickname, room });
+
+                    // Transition from Lobby to Chat view
+                    lobbyContainer.style.display = 'none';
+                    chatContainer.style.display = 'flex'; // Use 'flex' to activate the layout
+                }
+            });
+
+            // 2. Handle Message Sending (Chat Form Submission)
+            chatForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                
+                const msg = msgInput.value.trim();
+                
+                if (msg) {
+                    // Emit 'chat message' event to server
+                    socket.emit('chat message', msg);
+                    
+                    // Clear the input field
+                    msgInput.value = '';
+                }
+            });
+
+            // 3. Handle Mobile User List Toggle
+            toggleUsersBtn.addEventListener('click', () => {
+                chatSidebar.classList.toggle('visible');
+            });
+
+
+            // === Socket.IO Event Handlers (Client-Side) ===
+
+            // 1. Listen for 'system message'
+            socket.on('system message', (msg) => {
+                addMessage(msg, 'system-message');
+            });
+
+            // 2. Listen for 'chat message'
+            socket.on('chat message', ({ nickname, message }) => {
+                const messageType = (nickname === currentNickname) ? 'my-message' : 'other-message';
+                addMessage(message, messageType, nickname);
+            });
+
+            // 3. Listen for 'update user list'
+            socket.on('update user list', ({ roomName, userList: users }) => {
+                // Update room name display
+                roomNameDisplay.textContent = `Room: ${roomName}`;
+                roomNameDisplayMobile.textContent = roomName;
+
+                // Update user list
+                userList.innerHTML = ''; // Clear current list
+                users.forEach(user => {
+                    const li = document.createElement('li');
+                    li.textContent = user;
+                    userList.appendChild(li);
+                });
+            });
+
+
+            // === Helper Functions ===
+
+            /**
+             * Adds a message to the chat window.
+             * @param {string} message - The message content.
+             * @param {string} type - 'system-message', 'my-message', or 'other-message'.
+             * @param {string} [sender] - The nickname of the sender (for 'other-message').
+             */
+            function addMessage(message, type, sender) {
+                const messageElement = document.createElement('div');
+                messageElement.classList.add('message', type);
+
+                if (type === 'other-message' && sender) {
+                    const senderElement = document.createElement('div');
+                    senderElement.classList.add('message-sender');
+                    senderElement.textContent = sender;
+                    messageElement.appendChild(senderElement);
+                }
+
+                const textElement = document.createElement('div');
+                textElement.textContent = message;
+                messageElement.appendChild(textElement);
+
+                chatMessages.appendChild(messageElement);
+                
+                // Auto-scroll to the bottom
+                scrollToBottom();
+            }
+
+            /**
+             * Scrolls the chat-messages div to the very bottom.
+             */
+            function scrollToBottom() {
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+
+        });
+    </script>
+
+</body>
+  </html>
